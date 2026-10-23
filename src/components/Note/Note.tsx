@@ -3,7 +3,7 @@ import { store, useNote } from '../../store';
 import { usePointerDrag } from '../../hooks/usePointerDrag';
 import { useInteraction } from '../../context/InteractionContext';
 import { NOTE_COLORS, type NoteId } from '../../types';
-import { clamp, pointInRect } from '../../utils/geometry';
+import { clamp, rectsIntersect, type RectBounds } from '../../utils/geometry';
 import { MIN_NOTE_SIZE } from '../../constants';
 import './Note.css';
 
@@ -40,9 +40,23 @@ export const Note = memo(function Note({ id }: NoteProps) {
     }
   };
 
+  // The note is "over the bin" when the note's own box overlaps the trash box,
+  // not merely when the pointer does.
+  const overlapsTrash = (board: DOMRect, x: number, y: number, origin: DragOrigin): boolean => {
+    const trash = getTrashRect();
+    if (!trash) return false;
+    const noteRect: RectBounds = {
+      left: board.left + x,
+      top: board.top + y,
+      right: board.left + x + origin.width,
+      bottom: board.top + y + origin.height,
+    };
+    return rectsIntersect(noteRect, trash);
+  };
+
   const handleMove = usePointerDrag({
     onStart: captureOrigin,
-    onMove: (delta, event) => {
+    onMove: (delta) => {
       const origin = originRef.current;
       if (!origin) return;
       const board = getBoardRect();
@@ -53,17 +67,18 @@ export const Note = memo(function Note({ id }: NoteProps) {
         y = clamp(y, 0, board.height - origin.height);
       }
       store.moveNote(id, x, y);
-
-      const trash = getTrashRect();
-      setTrashActive(trash !== null && pointInRect(event.clientX, event.clientY, trash));
+      setTrashActive(board !== null && overlapsTrash(board, x, y, origin));
     },
-    onEnd: (_delta, event) => {
+    onEnd: (delta) => {
+      const origin = originRef.current;
       originRef.current = null;
-      const trash = getTrashRect();
       setTrashActive(false);
-      if (trash && pointInRect(event.clientX, event.clientY, trash)) {
-        store.removeNote(id);
-      }
+      if (!origin) return;
+      const board = getBoardRect();
+      if (!board) return;
+      const x = clamp(origin.x + delta.dx, 0, board.width - origin.width);
+      const y = clamp(origin.y + delta.dy, 0, board.height - origin.height);
+      if (overlapsTrash(board, x, y, origin)) store.removeNote(id);
     },
   });
 

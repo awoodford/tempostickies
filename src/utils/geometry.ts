@@ -4,7 +4,14 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
-/** Whether a viewport point (clientX/clientY) falls inside a DOMRect. */
-export function pointInRect(x: number, y: number, rect: DOMRect): boolean {
-  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+export interface RectBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** Whether two axis-aligned rectangles overlap. A DOMRect satisfies RectBounds. */
+export function rectsIntersect(a: RectBounds, b: RectBounds): boolean {
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
 }
