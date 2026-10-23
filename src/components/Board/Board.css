@@ -1,0 +1,37 @@
+.board {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--board-bg);
+  /* Faint dotted grid to communicate the draggable canvas. */
+  background-image: radial-gradient(var(--board-grid) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  touch-action: none;
+  cursor: crosshair;
+  user-select: none;
+}
+
+.board__preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Above every note so the rubber-band stays visible over existing notes. */
+  z-index: 2147483000;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+}
+
+.board__hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0 24px;
+  color: var(--muted);
+  font-size: 18px;
+  text-align: center;
+  pointer-events: none;
+}
